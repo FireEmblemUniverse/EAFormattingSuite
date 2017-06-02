@@ -17,11 +17,12 @@ import Data.ByteString (ByteString, hPut, readFile, writeFile)
 import Prelude hiding (writeFile, readFile)
 
 main::IO ()
-main = do 
+main = do
     argv <- getArgs
     let options = getOptions argv
     let params = getUnflaggedParams argv
     let toStdOut = elem "--to-stdout" options
+    let compression = if elem "--lz77" options then gbaLZ77Compress else id
 
     if elem "--help" options
     then putStr $ makeError toStdOut "Usage: ./Png2Dmp <filename.png> [--lz77] [-up <palettein.dmp>(not implemented)] [-po <paletteout.dmp>] [-o <outputfile.dmp>] [--palette-only] [--to-stdout] [--help]"
@@ -38,8 +39,8 @@ main = do
         Right inputData -> case pngToGba inputData of
             Left err -> putStr $ makeError toStdOut err
             Right (plt, img) -> do
-                let finalData = case elem "--lz77" options of True -> gbaLZ77Compress img; False -> img
-                if not paletteOnly 
+                let finalData = compression img
+                if not paletteOnly
                 then if toStdOut
                     then hPut stdout finalData >> case getParamAfterFlag "-o" argv of
                         Just name -> writeFile name finalData
@@ -52,4 +53,4 @@ main = do
                     then case (getParamAfterFlag "-po" argv) of
                         Nothing -> putStr $ makeError toStdOut "No output for the palette specified!"
                         Just outputPaletteName -> writeFile outputPaletteName plt
-                    else if paletteOnly then hPut stdout plt else return ()
+                    else if paletteOnly then hPut stdout (compression plt) else return ()
