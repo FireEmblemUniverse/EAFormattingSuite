@@ -167,7 +167,7 @@ unparseCode code cont = if null code
          Just (x, xs) -> case x of 
              0x00      -> unparseCode xs (cont . ("[X]"++))
              0x23      -> unparseCode xs (cont . ("[#]"++))
-             otherwise ->if not (x < 0x20 || x > 0x7F && x < 192)
+             otherwise ->if not (x < 0x20 || x > 0x7F)
                          then unparseCode xs (cont . (chr (fromIntegral x):))
                          else if x == 0x80
                          then unparseMovement code cont
