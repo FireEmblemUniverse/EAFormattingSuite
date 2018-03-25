@@ -148,13 +148,16 @@ mainAction args = runExceptT $ do
     if outputImages
       then do
         inds <- ExceptT . return $ encodePalettedPng properlyTransparentPalette properlyTransparentMug
-        outputPng <- liftIO $ openFile ("FormattedMug_"++inputFileName) WriteMode
-        liftIO $ Lazy.hPut outputPng inds
-        liftIO $ hClose outputPng
+        liftIO $ do
+            outputPng <- openFile ("FormattedMug_"++inputFileName) WriteMode
+            Lazy.hPut outputPng inds
+            hClose outputPng
+
         framesInds <- ExceptT . return $ encodePalettedPng properlyTransparentPalette properlyTransparentFrames
-        outputPngFrames <- liftIO $ openFile ("FormattedFrames_"++inputFileName) WriteMode
-        liftIO $ Lazy.hPut outputPngFrames framesInds
-        liftIO $ hClose outputPngFrames
+        liftIO $ do
+            outputPngFrames <- openFile ("FormattedFrames_"++inputFileName) WriteMode
+            Lazy.hPut outputPngFrames framesInds
+            hClose outputPngFrames
 
         liftIO $ writePng ("FormattedPalette_"++inputFileName) properlyTransparentPalette
         return ()
