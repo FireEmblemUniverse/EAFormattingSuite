@@ -4,7 +4,7 @@ then converts that to a palette-map used by the GBA.
 
 By: Crazycolorz5
 -}
-{-# LANGUAGE TypeFamilies #-} 
+{-# LANGUAGE TypeFamilies #-}
 import GBALZ77
 import GBAGraphics
 import GBAUtilities (stripExtension, padTo4, makeError)
@@ -29,17 +29,18 @@ main = do
     let unflaggedParams = getUnflaggedParams args
     let outputImages = Prelude.elem "--output-png" optFlags
     let toStdOut = Prelude.elem "--to-stdout" optFlags
-    if Prelude.elem "--help" optFlags 
+    if Prelude.elem "--help" optFlags
     then Prelude.putStr $ makeError toStdOut  "usage: ./PortraitFormatter <filename.png> [-o <outputfilename.dmp>] [--output-png] [--to-stdout] [--help]"
     else if Prelude.length unflaggedParams /= 1
     then Prelude.putStr $ makeError toStdOut "Incorrect number of parameters! Use ./PortraitFormatter --help for usage."
     else if elem "-o" args && getParamAfterFlag "-o" args == Nothing
     then Prelude.putStr $ makeError toStdOut "No output file specified."
-    else do 
+    else do
     let inputFileName = head unflaggedParams
     cinnamonRollEither <- readPng inputFileName
     case cinnamonRollEither of
         Left error -> Prelude.putStr $ makeError toStdOut error
+        Right dynamicCinnamonRoll -> do
                 let nonDynamicCinnamonRoll = case dynamicCinnamonRoll of ImageRGBA8 cinnamonRoll -> (pixelMap dropTransparency cinnamonRoll); ImageRGB8 cinnamonRoll -> cinnamonRoll; otherwise -> convertRGB8 dynamicCinnamonRoll
                 let (palette, paletteIndices) = gbaPalettize nonDynamicCinnamonRoll
                 let transparentColorIndex = pixelAt paletteIndices 0 0 -- Upper left pixel is transparent color
@@ -56,8 +57,8 @@ main = do
                   copySectionFromTo 12 10 paletteIndices 28 0 4 2 >>= --dim green
                   copySectionFromTo 12 12 paletteIndices 28 2 4 2 --white
                 formattedMugImmutable <- freezeImage formattedMug
-                
-                
+
+
                 emptyFramesImage <- newMutableImage 384 8
                 formattedFrames <- copySectionFromTo 0 10 paletteIndices 0 0 4 1 emptyFramesImage >>= --red
                   copySectionFromTo 0 11 paletteIndices 4 0 4 1 >>= --dark red
@@ -72,26 +73,26 @@ main = do
                   copySectionFromTo 8 12 paletteIndices 40 0 4 1 >>= --magenta
                   copySectionFromTo 8 13 paletteIndices 44 0 4 1 --dark magenta
                 formattedFramesImmutable <- freezeImage formattedFrames
-                
-                
+
+
                 emptyMinimugImage <- newMutableImage 32 32
                 croppedMinimugImage <- copySectionFromTo 12 2 paletteIndices 0 0 4 4 emptyMinimugImage
                 croppedMinimugImageImmutable <- freezeImage croppedMinimugImage
-                
-                let swapToTransparent = pixelMap (\pix->if pix == transparentColorIndex then 0 else if pix == 0 then transparentColorIndex else pix) 
+
+                let swapToTransparent = pixelMap (\pix->if pix == transparentColorIndex then 0 else if pix == 0 then transparentColorIndex else pix)
                 --Swap transparent and non-transparent color
                 let properlyTransparentMug = swapToTransparent formattedMugImmutable
-                
+
                 --Swap transparent and non-transparent color
                 let properlyTransparentFrames = swapToTransparent formattedFramesImmutable
-                
+
                 --Chibi image
                 let properlyTransparentMinimug = swapToTransparent croppedMinimugImageImmutable
-                
+
                 --Swap it within the palette
                 let properlyTransparentPalette = generateImage (\x->(\y->(let thisPx = pixelAt palette x y in if thisPx == transparentColor then pixelAt palette 0 0 else if thisPx == pixelAt palette 0 0 then transparentColor else thisPx))) (imageWidth palette) (imageHeight palette)
-                
-                
+
+
                 let mugOutput = addMugHeader . toROMFormat $ properlyTransparentMug
                 let paletteOutput = toROMPalette properlyTransparentPalette
                 let framesOutput = toROMFormat properlyTransparentFrames
@@ -107,38 +108,38 @@ main = do
                         hPut outputHandle minimugOutput
                         hClose outputHandle
                     Nothing -> return ()
-                
-                if toStdOut 
+
+                if toStdOut
                 then do
                     hPut stdout mugOutput
                     hPut stdout framesOutput
                     hPut stdout paletteOutput
                     hPut stdout minimugOutput
-                else if not (elem "-o" args) 
+                else if not (elem "-o" args)
                 then do
                     outputMug <- openFile (stripExtension inputFileName ++ "_mug.dmp") WriteMode
                     hPut outputMug mugOutput
                     hClose outputMug
-                    
+
                     outputPal <- openFile (stripExtension inputFileName ++ "_palette.dmp") WriteMode
                     hPut outputPal paletteOutput
                     hClose outputPal
-                    
+
                     outputFrames <- openFile (stripExtension inputFileName ++ "_frames.dmp") WriteMode
                     hPut outputFrames framesOutput
                     hClose outputFrames
-                    
+
                     outputMinimug <- openFile (stripExtension inputFileName ++ "_minimug.dmp") WriteMode
                     hPut outputMinimug minimugOutput
                     hClose outputMinimug
                 else return ()
-                
+
                 {-
                 outputMinimugUncomp <- openFile (stripExtension inputFileName ++ "_debug.dmp") WriteMode
                 hPut outputMinimugUncomp minimugOutputUnComp
                 hClose outputMinimugUncomp
                 -}
-                
+
                 --For debugging/visual display/bragging, just output the formatted file
                 if outputImages
                   then do
@@ -154,12 +155,11 @@ main = do
                         outputPngFrames <- openFile ("FormattedFrames_"++inputFileName) WriteMode
                         Lazy.hPut outputPngFrames inds
                         hClose outputPngFrames
-                        
-                    writePng ("FormattedPalette_"++inputFileName) properlyTransparentPalette 
+
+                    writePng ("FormattedPalette_"++inputFileName) properlyTransparentPalette
                     return ()
                   else return ()
 
 
 addMugHeader::ByteString -> ByteString
 addMugHeader = append (pack [0x00, 0x04, 0x10, 0x00])
-        
