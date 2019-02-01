@@ -27,7 +27,7 @@ import Data.Char
 import Data.ByteString as ByteString (ByteString, pack, unpack, uncons, null, splitAt)
 import qualified Data.ByteString as ByteString (take, drop, empty)
 import Data.ByteString (hPut)
-import Data.Map.Strict (Map, (!), empty, member, insert)
+import Data.Map.Strict (Map, (!), empty, member, insert, lookup)
 import Control.Monad (join, foldM)
 import Control.Exception (try, IOException)
 import GBAUtilities (intToHex, stripExtension)
