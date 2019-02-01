@@ -1,8 +1,10 @@
 module Gringe where
 import Data.Map.Strict as M
+import Data.Word
 
 gringeMap = M.fromList gringeList
 
+gringeList :: [(Char, [Word8])]
 gringeList = [(' ', [0x82, 0xB8]), -- space
               ('!', [0x82, 0xBA]), -- !
               ('"', [0x82, 0xBC]), -- "

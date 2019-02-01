@@ -32,7 +32,7 @@ import Control.Monad (join, foldM)
 import Control.Exception (try, IOException)
 import GBAUtilities (intToHex, stripExtension)
 import Gringe (gringeMap)
-import Prelude hiding (null)
+import Prelude hiding (null, lookup)
 import qualified Prelude
 --import Control.Exception --TODO: Make syntax errors imformative.
 type Definitions = Map String [Word8]
@@ -67,8 +67,7 @@ containsData _ = True
 
 parseCode::Definitions->Int->String->(String->Either [Word8] (Int, String))->Either [Word8] (Int, String)
 parseCode specials lineNum ('[':xs) cont = parseSpecial specials lineNum xs (cont . tail) --tail to get rid of the ']'
-parseCode specials lineNum (x:xs) cont = let value = fromIntegral (ord x) in
-    case lookup value gringeMap of
+parseCode specials lineNum (x:xs) cont = case lookup x gringeMap of
         Nothing -> Right (lineNum, "No Gringe encoding for ASCII character: " ++ show x) --Check this error first to catch the first error in the file.
         Just encoding -> propogateError (cont xs) (encoding++)
 

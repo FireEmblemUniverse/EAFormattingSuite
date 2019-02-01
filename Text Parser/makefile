@@ -12,12 +12,14 @@ removeParser:
 FEParserJIS: GBAUtilities
 	ghc -O2 -c "JIS/FEParser.hs" -i../ -ohi "JIS/FEParser.hi"
 
-FEParser: GBAUtilities
+FEParser: GBAUtilities Gringe
 	ghc -O2 -c "../FEParser.hs" -i../ -ohi "../FEParser.hi"
 
 GBAUtilities:
 	ghc -O2 -c "../GBAUtilities.hs" -i../
 
+Gringe:
+	ghc -O2 -c "../Gringe.hs"
 
 Profile:
 	ghc -O2 "ParseFile.hs" -i../ -prof -fprof-auto -rtsopts
