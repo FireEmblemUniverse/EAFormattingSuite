@@ -31,6 +31,7 @@ import Data.Map.Strict (Map, (!), empty, member, insert)
 import Control.Monad (join, foldM)
 import Control.Exception (try, IOException)
 import GBAUtilities (intToHex, stripExtension)
+import Gringe (gringeMap)
 import Prelude hiding (null)
 import qualified Prelude
 --import Control.Exception --TODO: Make syntax errors imformative.
@@ -67,9 +68,9 @@ containsData _ = True
 parseCode::Definitions->Int->String->(String->Either [Word8] (Int, String))->Either [Word8] (Int, String)
 parseCode specials lineNum ('[':xs) cont = parseSpecial specials lineNum xs (cont . tail) --tail to get rid of the ']'
 parseCode specials lineNum (x:xs) cont = let value = fromIntegral (ord x) in
-    if value < 0x20 || (value > 0x7F && value < 192) --192 is the decimal code for capital C-cedilla; the first diacritical character
-        then Right (lineNum, "ASCII character out of range: " ++ show value) --Check this error first to catch the first error in the file.
-        else propogateError (cont xs) (value:)
+    case lookup value gringeMap of
+        Nothing -> Right (lineNum, "No Gringe encoding for ASCII character: " ++ show x) --Check this error first to catch the first error in the file.
+        Just encoding -> propogateError (cont xs) (encoding++)
 
 
 parseSpecial::Definitions->Int->String->(String->Either [Word8] (Int, String))->Either [Word8] (Int, String)
