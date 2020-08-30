@@ -26,6 +26,7 @@ import Data.Word
 import Data.Char
 import Data.ByteString as ByteString (ByteString, pack, unpack, uncons, null, splitAt)
 import qualified Data.ByteString as ByteString (take, drop, empty)
+import qualified Data.ByteString.Lazy as BSLazy
 import Data.ByteString (hPut)
 import Data.Map.Strict (Map, (!), empty, member, insert)
 import Control.Monad (join, foldM)
@@ -34,7 +35,9 @@ import GBAUtilities (intToHex, stripExtension)
 import Prelude hiding (null)
 import qualified Prelude
 --import Control.Exception --TODO: Make syntax errors imformative.
+import Data.Encoding
 import Data.Encoding.ShiftJIS
+import Data.Binary.Put
 type Definitions = Map String [Word8]
 
 prepadWithToLength str chr len = if length str < len then Prelude.take (len - length str) (repeat chr) ++ str else str
@@ -70,7 +73,7 @@ parseCode specials lineNum ('[':xs) cont = parseSpecial specials lineNum xs (con
 parseCode specials lineNum (x:xs) cont = let value = fromIntegral (ord x) in
     if value < 0x20 || (value > 0x7F && value < 192) --192 is the decimal code for capital C-cedilla; the first diacritical character
         then Right (lineNum, "ASCII character out of range: " ++ show value) --Check this error first to catch the first error in the file.
-        else propogateError (cont xs) ((ByteString.unpack . unPut) (encodeChar ShiftJIS x) ++) -- Change ASCII to JIS encoding
+        else propogateError (cont xs) ((BSLazy.unpack . runPut) (encodeChar ShiftJIS x) ++) -- Change ASCII to JIS encoding
 
 parseSpecial::Definitions->Int->String->(String->Either [Word8] (Int, String))->Either [Word8] (Int, String)
 parseSpecial specials lineNum ('0':'x':xs) cont = parseNumber specials lineNum xs cont
