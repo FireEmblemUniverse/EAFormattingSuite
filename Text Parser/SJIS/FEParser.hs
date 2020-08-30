@@ -34,6 +34,7 @@ import GBAUtilities (intToHex, stripExtension)
 import Prelude hiding (null)
 import qualified Prelude
 --import Control.Exception --TODO: Make syntax errors imformative.
+import Data.Encoding.ShiftJIS
 type Definitions = Map String [Word8]
 
 prepadWithToLength str chr len = if length str < len then Prelude.take (len - length str) (repeat chr) ++ str else str
@@ -69,90 +70,7 @@ parseCode specials lineNum ('[':xs) cont = parseSpecial specials lineNum xs (con
 parseCode specials lineNum (x:xs) cont = let value = fromIntegral (ord x) in
     if value < 0x20 || (value > 0x7F && value < 192) --192 is the decimal code for capital C-cedilla; the first diacritical character
         then Right (lineNum, "ASCII character out of range: " ++ show value) --Check this error first to catch the first error in the file.
-        else propogateError (cont xs) (encodeJIS x ++) -- Change ASCII to JIS encoding
-
-encodeJIS :: Char -> [Word8]
-encodeJIS ' ' = [0x81, 0x40]
-encodeJIS ',' = [0x81, 0x43]
-encodeJIS '.' = [0x81, 0x42] --was wrong
-encodeJIS ':' = [0x81, 0x75] --was wrong
---encodeJIS ';' = [0x81, 0x47] --doesn't seem to exist in this font
-encodeJIS '?' = [0x81, 0x48]
-encodeJIS '!' = [0x81, 0x49]
-encodeJIS '\'' = [0x81, 0x76] --was wrong, 66 is too bold
---encodeJIS '"' = [0x81, 0x68] --open double quotes is 67, close double quotes is 68; not sure if there's one that fits both
-encodeJIS '(' = [0x81, 0x69] --was wrong
-encodeJIS ')' = [0x81, 0x6A] --was wrong
-encodeJIS '+' = [0x81, 0x7B] --was wrong (another one at 5B?)
-encodeJIS '-' = [0x81, 0x7C] --was wrong
---encodeJIS '=' = [0x81, 0x81] --doesn't seem to exist in this font
-encodeJIS '/' = [0x81, 0x5E]
-encodeJIS '~' = [0x81, 0x60]
-
-encodeJIS '0' = [0x82, 0x4F]
-encodeJIS '1' = [0x82, 0x50]
-encodeJIS '2' = [0x82, 0x51]
-encodeJIS '3' = [0x82, 0x52]
-encodeJIS '4' = [0x82, 0x53]
-encodeJIS '5' = [0x82, 0x54]
-encodeJIS '6' = [0x82, 0x55]
-encodeJIS '7' = [0x82, 0x56]
-encodeJIS '8' = [0x82, 0x57]
-encodeJIS '9' = [0x82, 0x58]
-
-encodeJIS 'A' = [0x82, 0x60]
-encodeJIS 'B' = [0x82, 0x61]
-encodeJIS 'C' = [0x82, 0x62]
-encodeJIS 'D' = [0x82, 0x63]
-encodeJIS 'E' = [0x82, 0x64]
-encodeJIS 'F' = [0x82, 0x65]
-encodeJIS 'G' = [0x82, 0x66]
-encodeJIS 'H' = [0x82, 0x67]
-encodeJIS 'I' = [0x82, 0x68]
-encodeJIS 'J' = [0x82, 0x69]
-encodeJIS 'K' = [0x82, 0x6A]
-encodeJIS 'L' = [0x82, 0x6B]
-encodeJIS 'M' = [0x82, 0x6C]
-encodeJIS 'N' = [0x82, 0x6D]
-encodeJIS 'O' = [0x82, 0x6E]
-encodeJIS 'P' = [0x82, 0x6F]
-encodeJIS 'Q' = [0x82, 0x70]
-encodeJIS 'R' = [0x82, 0x71]
-encodeJIS 'S' = [0x82, 0x72]
-encodeJIS 'T' = [0x82, 0x73]
-encodeJIS 'U' = [0x82, 0x74]
-encodeJIS 'V' = [0x82, 0x75]
-encodeJIS 'W' = [0x82, 0x76]
-encodeJIS 'X' = [0x82, 0x77]
-encodeJIS 'Y' = [0x82, 0x78]
-encodeJIS 'Z' = [0x82, 0x79]
-
-encodeJIS 'a' = [0x82, 0x81]
-encodeJIS 'b' = [0x82, 0x82]
-encodeJIS 'c' = [0x82, 0x83]
-encodeJIS 'd' = [0x82, 0x84]
-encodeJIS 'e' = [0x82, 0x85]
-encodeJIS 'f' = [0x82, 0x86]
-encodeJIS 'g' = [0x82, 0x87]
-encodeJIS 'h' = [0x82, 0x88]
-encodeJIS 'i' = [0x82, 0x89]
-encodeJIS 'j' = [0x82, 0x8A]
-encodeJIS 'k' = [0x82, 0x8B]
-encodeJIS 'l' = [0x82, 0x8C]
-encodeJIS 'm' = [0x82, 0x8D]
-encodeJIS 'n' = [0x82, 0x8E]
-encodeJIS 'o' = [0x82, 0x8F]
-encodeJIS 'p' = [0x82, 0x90]
-encodeJIS 'q' = [0x82, 0x91]
-encodeJIS 'r' = [0x82, 0x92]
-encodeJIS 's' = [0x82, 0x93]
-encodeJIS 't' = [0x82, 0x94]
-encodeJIS 'u' = [0x82, 0x95]
-encodeJIS 'v' = [0x82, 0x96]
-encodeJIS 'w' = [0x82, 0x97]
-encodeJIS 'x' = [0x82, 0x98]
-encodeJIS 'y' = [0x82, 0x99]
-encodeJIS 'z' = [0x82, 0x9A]
+        else propogateError (cont xs) ((ByteString.unpack . unPut) (encodeChar ShiftJIS x) ++) -- Change ASCII to JIS encoding
 
 parseSpecial::Definitions->Int->String->(String->Either [Word8] (Int, String))->Either [Word8] (Int, String)
 parseSpecial specials lineNum ('0':'x':xs) cont = parseNumber specials lineNum xs cont

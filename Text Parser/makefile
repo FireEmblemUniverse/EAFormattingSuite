@@ -3,14 +3,14 @@ all: remove ParseFile ParseFileJIS ParseFolder
 ParseFile: removeParser FEParser
 	ghc -O2 "ParseFile.hs" -i../ -o "ParseFile"
 
-ParseFileJIS: removeParser FEParserJIS
-	ghc -O2 "ParseFile.hs" -iJIS/:../ -o "ParseFileJIS"
+ParseFileSJIS: removeParser FEParserSJIS
+	ghc -O2 "ParseFile.hs" -iSJIS/:../ -o "ParseFileJIS"
 
 removeParser: 
 	rm -f "../FEParser.hi"
 
-FEParserJIS: GBAUtilities
-	ghc -O2 -c "JIS/FEParser.hs" -i../ -ohi "JIS/FEParser.hi"
+FEParserSJIS: GBAUtilities
+	ghc -O2 -c "SJIS/FEParser.hs" -i../ -ohi "SJIS/FEParser.hi"
 
 FEParser: GBAUtilities Gringe
 	ghc -O2 -c "../FEParser.hs" -i../ -ohi "../FEParser.hi"
