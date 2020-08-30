@@ -70,10 +70,11 @@ containsData _ = True
 
 parseCode::Definitions->Int->String->(String->Either [Word8] (Int, String))->Either [Word8] (Int, String)
 parseCode specials lineNum ('[':xs) cont = parseSpecial specials lineNum xs (cont . tail) --tail to get rid of the ']'
-parseCode specials lineNum (x:xs) cont = let value = fromIntegral (ord x) in
-    if value < 0x20 || (value > 0x7F && value < 192) --192 is the decimal code for capital C-cedilla; the first diacritical character
-        then Right (lineNum, "ASCII character out of range: " ++ show value) --Check this error first to catch the first error in the file.
-        else propogateError (cont xs) ((BSLazy.unpack . runPut) (encodeChar ShiftJIS x) ++) -- Change ASCII to JIS encoding
+parseCode specials lineNum (x:xs) cont = 
+    case encodeChar ShiftJIS x of 
+      PutME (Left _) -> Right (lineNum, "Encoding error: " ++ [x] ++ " " ++ show (ord x))
+      PutME (Right (myPut, ())) -> propogateError (cont xs) (((BSLazy.unpack . runPut) myPut) ++)
+    -- Change Unicode to SJIS encoding
 
 parseSpecial::Definitions->Int->String->(String->Either [Word8] (Int, String))->Either [Word8] (Int, String)
 parseSpecial specials lineNum ('0':'x':xs) cont = parseNumber specials lineNum xs cont
@@ -258,7 +259,12 @@ parseFile::String->IO (Either ByteString (Int, String))
 parseFile = flip parseFileWithDefinitions empty
 
 parseFileWithDefinitions::String->Definitions->IO (Either ByteString (Int, String))
-parseFileWithDefinitions inputFileName defns = (try (readFile inputFileName)::IO (Either IOException String)) >>= \result-> case result of
+parseFileWithDefinitions inputFileName defns = (try (do
+    inputHandle <- openFile inputFileName ReadMode
+    hSetEncoding inputHandle utf8
+    contents <- hGetContents inputHandle
+    return contents
+    )::IO (Either IOException String)) >>= \result-> case result of
     Left exception -> return $ Right (0, "Could not read file.")
     Right rawInput -> return (parse defns rawInput)
 
