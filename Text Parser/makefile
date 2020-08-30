@@ -4,7 +4,7 @@ ParseFile: removeParser FEParser
 	ghc -O2 "ParseFile.hs" -i../ -o "ParseFile"
 
 ParseFileSJIS: removeParser FEParserSJIS
-	ghc -O2 "ParseFile.hs" -iSJIS/:../ -o "ParseFileJIS"
+	ghc -O2 "ParseFile.hs" -iSJIS/:../ -o "ParseFileSJIS"
 
 removeParser: 
 	rm -f "../FEParser.hi"
@@ -33,5 +33,5 @@ clean:
 
 remove:
 	rm -f ParseFile
-	rm -f ParseFileJIS
+	rm -f ParseFileSJIS
 	rm -f ParseFolder
