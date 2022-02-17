@@ -30,7 +30,7 @@ parseFolder definitions dir = do
 main::IO()
 main = do
     --dir <- getCurrentDirectory
-    definitions <- parseDefinitions True
+    definitions <- parseDefinitions "ParseDefinitions.txt" True
     parseFolder definitions "."
     
     putStr "Complete. Press enter to continue."

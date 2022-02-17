@@ -362,8 +362,8 @@ parseADefinition otherDefn text = case (parse otherDefn (text++"[X]"))  of
 
 putStrLnIf bool arg = if bool then putStrLn arg else return ()
 
-parseDefinitions::Bool -> IO (Definitions)
-parseDefinitions verbose = (try (readFile "ParseDefinitions.txt")::IO (Either IOException String)) >>= \result -> case result of
+parseDefinitions::String -> Bool -> IO (Definitions)
+parseDefinitions fname verbose = (try (readFile fname)::IO (Either IOException String)) >>= \result -> case result of
     Left exception -> putStrLnIf verbose "Error reading definitions file.\n" >> return empty
     Right rawInput -> do
         putStrLnIf verbose "Parsing definitions file."
