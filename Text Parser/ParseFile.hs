@@ -14,6 +14,8 @@ import Prelude hiding (writeFile)
 import GBAUtilities (stripExtension, makeError)
 import Data.ByteString.Char8 (pack)
 
+defsFlag = "-defs"
+
 main::IO ()
 main = do
     args <- getArgs
@@ -23,18 +25,18 @@ main = do
     let quiet = elem "--q" options
 
     if elem "--help" options
-    then putStr $ makeError toStdOut "Usage: ./ParseFile <filename.txt> [-o <outputfile.dmp>] [--defs <definitions_file.txt>] [--to-stdout] [--q] [--help]"
+    then putStr $ makeError toStdOut "Usage: ./ParseFile <filename.txt> [-o <outputfile.dmp>] [-defs <definitions_file.txt>] [--to-stdout] [--q] [--help]"
     else if length params /= 1
     then putStr $ makeError toStdOut "Incorrect number of parameters. Use ./ParseFile --help for usage."
     else if elem "-o" args && getParamAfterFlag "-o" args == Nothing
     then putStr $ makeError toStdOut "No output file specified."
-    else if elem "--defs" args && getParamAfterFlag "--defs" args == Nothing 
+    else if elem defsFlag args && getParamAfterFlag defsFlag args == Nothing 
     then putStr $ makeError toStdOut "No definitions file specified."
     else do
     let inputFileName = head params
     
-    let definitionsFilename = if elem "--defs" args
-        then case getParamAfterFlag "--defs" args of
+    let definitionsFilename = if elem defsFlag args {- TODO: This is a bit of a lazy hack, it should be taken care of above tbqh -}
+        then case getParamAfterFlag defsFlag args of
             Just s -> s
             Nothing -> "ParseDefinitions.txt" {- Should be unreachable -}
         else "ParseDefinitions.txt"
