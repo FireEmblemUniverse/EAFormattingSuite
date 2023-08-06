@@ -33,42 +33,42 @@ main = do
     else if elem defsFlag args && getParamAfterFlag defsFlag args == Nothing 
     then putStr $ makeError toStdOut "No definitions file specified."
     else do
-    let inputFileName = head params
-    
-    let definitionsFilename = if elem defsFlag args {- TODO: This is a bit of a lazy hack, it should be taken care of above tbqh -}
-        then case getParamAfterFlag defsFlag args of
-            Just s -> s
-            Nothing -> "ParseDefinitions.txt" {- Should be unreachable -}
-        else "ParseDefinitions.txt"
-    
-    parsedFile <- parseDefinitions definitionsFilename (not (toStdOut || quiet)) >>= parseFileWithDefinitions inputFileName
-    
-    if elem "-o" args
-    then case getParamAfterFlag "-o" args of 
-        Just name -> case parsedFile of
-            Left result -> writeFile name result
-            Right (lineNum, err) -> return()
-        Nothing -> return ()
-    else return ()
-    
-    if toStdOut
-    then case parsedFile of
-        Left result -> hPut stdout result
-        Right err -> putStr $ makeError toStdOut ("Error parsing file " ++ inputFileName ++ ", line " ++ show (fst err) ++ ": " ++ (snd err))
-    else if quiet
-    then let contents = (case parsedFile of Left result -> result; Right err -> pack $ makeError True ("Error parsing file " ++ inputFileName ++ ", line " ++ show (fst err) ++ ": " ++ (snd err)))
-        in writeFile (case getParamAfterFlag "-o" args of Just name -> name; Nothing -> stripExtension inputFileName ++ ".dmp") contents
-    else do 
-        if not (elem "-o" args) 
-        then case parsedFile of
-            Left result -> writeFile (stripExtension inputFileName ++ ".dmp") result
-            Right (lineNum, err) ->
-                putStrLn ("Error on line " ++ show lineNum ++ ": " ++ err)
+        let inputFileName = head params
+        
+        let definitionsFilename = if elem defsFlag args {- TODO: This is a bit of a lazy hack, it should be taken care of above tbqh -}
+            then case getParamAfterFlag defsFlag args of
+                Just s -> s
+                Nothing -> "ParseDefinitions.txt" {- Should be unreachable -}
+            else "ParseDefinitions.txt"
+        
+        parsedFile <- parseDefinitions definitionsFilename (not (toStdOut || quiet)) >>= parseFileWithDefinitions inputFileName
+        
+        if elem "-o" args
+        then case getParamAfterFlag "-o" args of 
+            Just name -> case parsedFile of
+                Left result -> writeFile name result
+                Right (lineNum, err) -> return()
+            Nothing -> return ()
         else return ()
-        putStrLn ("Finished parsing " ++ inputFileName ++ ".")
-    
-    -- putStr "Complete. Press enter to continue."
-    -- hFlush stdout
-    -- getLine
-    
-    return ()
+        
+        if toStdOut
+        then case parsedFile of
+            Left result -> hPut stdout result
+            Right err -> putStr $ makeError toStdOut ("Error parsing file " ++ inputFileName ++ ", line " ++ show (fst err) ++ ": " ++ (snd err))
+        else if quiet
+        then let contents = (case parsedFile of Left result -> result; Right err -> pack $ makeError True ("Error parsing file " ++ inputFileName ++ ", line " ++ show (fst err) ++ ": " ++ (snd err)))
+            in writeFile (case getParamAfterFlag "-o" args of Just name -> name; Nothing -> stripExtension inputFileName ++ ".dmp") contents
+        else do 
+            if not (elem "-o" args) 
+            then case parsedFile of
+                Left result -> writeFile (stripExtension inputFileName ++ ".dmp") result
+                Right (lineNum, err) ->
+                    putStrLn ("Error on line " ++ show lineNum ++ ": " ++ err)
+            else return ()
+            putStrLn ("Finished parsing " ++ inputFileName ++ ".")
+        
+        -- putStr "Complete. Press enter to continue."
+        -- hFlush stdout
+        -- getLine
+        
+        return ()

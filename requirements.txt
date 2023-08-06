@@ -1,3 +1,4 @@
 vector
 juicypixels
 transformers
+utf8-string

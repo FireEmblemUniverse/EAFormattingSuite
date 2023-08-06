@@ -24,7 +24,8 @@ This module also includes functions for un-parsing formatted text.
 import System.IO
 import Data.Word
 import Data.Char
-import Data.ByteString as ByteString (ByteString, pack, unpack, uncons, null, splitAt)
+import Data.ByteString as ByteString (ByteString, pack, unpack, uncons, null, splitAt, append)
+import qualified Data.ByteString.UTF8 as UTF8 (fromChar)
 import qualified Data.ByteString as ByteString (take, drop, empty)
 import Data.ByteString (hPut)
 import Data.Map.Strict (Map, (!), empty, member, insert)
@@ -66,12 +67,7 @@ containsData _ = True
 
 parseCode::Definitions->Int->String->(String->Either [Word8] (Int, String))->Either [Word8] (Int, String)
 parseCode specials lineNum ('[':xs) cont = parseSpecial specials lineNum xs (cont . tail) --tail to get rid of the ']'
-parseCode specials lineNum (x:xs) cont = let value = fromIntegral (ord x) in
-    if validASCII value
-        then propogateError (cont xs) (value:)
-        else Right (lineNum, "ASCII character out of range: " ++ show value) --Check this error first to catch the first error in the file.
-
-validASCII x = (x >= 0x20 && x <= 0x7F) || x >= 0xC0 || x `elem` [0x93, 0x94, 0xA1, 0xAB, 0xBB, 0xBF] -- Punctuation marks.
+parseCode specials lineNum (x:xs) cont = propogateError (cont xs) ((unpack $ UTF8.fromChar x)++)
 
 parseSpecial::Definitions->Int->String->(String->Either [Word8] (Int, String))->Either [Word8] (Int, String)
 parseSpecial specials lineNum ('0':'x':xs) cont = parseNumber specials lineNum xs cont
